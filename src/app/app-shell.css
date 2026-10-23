@@ -1,0 +1,252 @@
+@layer layout {
+  .bw-app-shell {
+    position: fixed;
+    inset-inline: 0;
+    top: var(--viewport-top, 0px);
+    width: 100%;
+    height: var(--app-height, 100dvh);
+    display: flex;
+    overflow: hidden;
+    background: var(--bw-canvas);
+  }
+  .bw-app-column {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top);
+  }
+  .bw-sidebar-dock {
+    flex: none;
+    width: 280px;
+    height: 100%;
+    padding-top: env(safe-area-inset-top);
+    border-inline-end: 1px solid var(--bw-border);
+    background: var(--bw-surface-subtle);
+    animation: bw-fade-in var(--bw-duration) var(--bw-ease-standard);
+  }
+  .bw-app-header {
+    position: relative;
+    z-index: var(--bw-layer-dock);
+    flex-shrink: 0;
+    width: 100%;
+    background: var(--bw-canvas);
+    transition: box-shadow var(--bw-duration) var(--bw-ease-standard);
+  }
+  .bw-app-header::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: var(--bw-border);
+    opacity: 0;
+    transition: opacity var(--bw-duration) var(--bw-ease-standard);
+  }
+  .bw-app-shell[data-scrolled] .bw-app-header {
+    box-shadow: var(--bw-shadow-sm);
+  }
+  .bw-app-shell[data-scrolled] .bw-app-header::after {
+    opacity: 1;
+  }
+  .bw-app-header-inner {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 8px 20px 16px;
+  }
+  .bw-app-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-bottom: 12px;
+  }
+  .bw-app-leading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin-inline-start: -10px;
+  }
+  .bw-app-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bw-wordmark {
+    font-weight: 650;
+    font-size: var(--bw-type-h3);
+    letter-spacing: -0.03em;
+  }
+  .bw-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .bw-page-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    animation: bw-rise var(--bw-duration-slow) var(--bw-ease-out);
+  }
+  .bw-page-heading > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .bw-page-heading h1 {
+    font-size: var(--bw-type-display);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+    letter-spacing: -0.04em;
+  }
+  .bw-page-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 4px;
+    min-width: 0;
+  }
+  .bw-page-subtitle {
+    color: var(--bw-text-muted);
+    font-size: var(--bw-type-small);
+    min-width: 0;
+    max-width: 100%;
+  }
+  .bw-page-status {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .bw-app-main {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding: 4px 20px calc(32px + env(safe-area-inset-bottom));
+    animation: bw-page-in var(--bw-duration-slow) var(--bw-ease-out);
+  }
+  @keyframes bw-page-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+  .bw-app-main--editor {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    animation-name: bw-fade-in;
+  }
+  .bw-app-shell.is-editing .bw-app-header-inner {
+    padding-bottom: 8px;
+  }
+  .bw-app-shell.is-editing .bw-app-topline {
+    margin-bottom: 8px;
+  }
+  .bw-app-shell.is-editing .bw-page-heading h1 {
+    font-size: var(--bw-type-h1);
+    font-weight: 650;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .bw-app-shell.is-editing .bw-page-meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-top: 8px;
+  }
+  .bw-floating-create {
+    position: absolute;
+    z-index: var(--bw-layer-floating);
+    inset-inline-end: 20px;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    width: 56px;
+    min-height: 56px;
+    border-radius: 50%;
+    box-shadow: var(--bw-shadow-lg);
+    animation: bw-pop-in var(--bw-duration-slow) var(--bw-ease-spring) 120ms
+      backwards;
+  }
+  .bw-floating-create > .bw-icon {
+    transition: transform var(--bw-duration-slow) var(--bw-ease-spring);
+  }
+  @media (hover: hover) {
+    .bw-floating-create:hover:not(:disabled) > .bw-icon {
+      transform: rotate(90deg);
+    }
+  }
+  .bw-workspace-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-height: 32px;
+    padding: 4px 10px 4px 8px;
+    border-radius: var(--bw-radius-md);
+    color: var(--bw-accent);
+    font-size: var(--bw-type-small);
+    font-weight: 500;
+  }
+  button.bw-workspace-context {
+    border: 0;
+    background: transparent;
+  }
+  .bw-app-shell.is-editing .bw-page-subtitle {
+    margin-inline-start: -8px;
+  }
+  @media (hover: hover) {
+    button.bw-workspace-context:hover:not(:disabled) {
+      background: var(--bw-state-hover);
+    }
+  }
+  .bw-workspace-context > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-compact-viewport="true"] .bw-app-shell.is-editing .bw-app-header-inner {
+    padding: 4px 12px;
+  }
+  [data-compact-viewport="true"] .bw-app-shell.is-editing .bw-app-topline {
+    margin-bottom: 0;
+  }
+  [data-compact-viewport="true"] .bw-app-shell.is-editing .bw-page-heading h1 {
+    display: block;
+    font-size: 1.125rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  [data-compact-viewport="true"] .bw-app-shell.is-editing .bw-page-subtitle {
+    display: none;
+  }
+  [data-compact-viewport="true"] .bw-app-shell.is-editing .bw-page-meta {
+    margin-top: 2px;
+  }
+  @media (min-width: 768px) {
+    .bw-app-header-inner {
+      padding: 20px 32px 24px;
+    }
+    .bw-app-main {
+      padding-inline: 32px;
+    }
+    .bw-app-main--editor {
+      padding-inline: 0;
+    }
+    .bw-app-topline {
+      margin-bottom: 20px;
+    }
+    .bw-app-shell.is-editing .bw-app-header-inner {
+      max-width: 904px;
+    }
+  }
+}

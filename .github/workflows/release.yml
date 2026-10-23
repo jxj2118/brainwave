@@ -1,0 +1,252 @@
+name: Release draft
+
+on:
+  push:
+    tags: ["v[0-9]*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  checks:
+    needs: version
+    uses: ./.github/workflows/check.yml
+    with:
+      ref: ${{ needs.version.outputs.commit }}
+
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      commit: ${{ steps.version.outputs.commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify tag and application versions
+        id: version
+        shell: python
+        run: |
+          import json, os, re, subprocess, tomllib
+          from pathlib import Path
+          tag = os.environ['RELEASE_TAG']
+          assert re.fullmatch(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?', tag), 'Expected a version tag such as v0.1.0'
+          subprocess.run(['git', 'show-ref', '--verify', f'refs/tags/{tag}'], check=True)
+          version = json.loads(Path('package.json').read_text())['version']
+          assert tag == f'v{version}', 'Tag must match package.json version'
+          assert json.loads(Path('src-tauri/tauri.conf.json').read_text())['version'] == version, 'Tauri version mismatch'
+          assert tomllib.loads(Path('src-tauri/Cargo.toml').read_text())['package']['version'] == version, 'Cargo app version mismatch'
+          commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\ntag={tag}\ncommit={commit}\n')
+
+  desktop:
+    needs: [checks, version]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            name: macos-universal
+            target: universal-apple-darwin
+            source: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            asset: Brainwave-macos-universal.dmg
+          - os: windows-2025
+            name: windows-x64
+            target: x86_64-pc-windows-msvc
+            source: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe
+            asset: Brainwave-windows-x64-setup.exe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+      - name: Install Rust targets
+        shell: bash
+        env:
+          BUILD_OS: ${{ runner.os }}
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          if [ "$BUILD_OS" = "macOS" ]; then
+            rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          else
+            rustup target add x86_64-pc-windows-msvc
+          fi
+      - run: bun install --frozen-lockfile
+      - name: Build desktop installer
+        env:
+          BUILD_TARGET: ${{ matrix.target }}
+        run: bun run build:desktop --target "$env:BUILD_TARGET"
+        shell: pwsh
+      - name: Verify macOS bundle
+        if: runner.os == 'macOS'
+        run: codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/Brainwave.app
+      - name: Collect installer
+        shell: python
+        env:
+          SOURCE_PATTERN: ${{ matrix.source }}
+          ASSET_NAME: ${{ matrix.asset }}
+        run: |
+          import glob, os, shutil
+          from pathlib import Path
+          sources = glob.glob(os.environ['SOURCE_PATTERN'])
+          assert len(sources) == 1, f'Expected one installer, found {sources}'
+          Path('release').mkdir(exist_ok=True)
+          shutil.copy2(sources[0], Path('release') / os.environ['ASSET_NAME'])
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: installer-${{ matrix.name }}
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    needs: [checks, version]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.version.outputs.commit }}
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install Android toolchain
+        shell: bash
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          rustup target add aarch64-linux-android
+          sdkmanager 'platform-tools' 'platforms;android-37' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+          printf 'NDK_HOME=%s/ndk/28.2.13676358\n' "$ANDROID_HOME" >> "$GITHUB_ENV"
+      - name: Restore existing Android signing identity
+        shell: python
+        run: |
+          import base64, os
+          from pathlib import Path
+          for name in ['ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD', 'ANDROID_KEY_ALIAS']:
+              assert os.environ.get(name), f'Missing repository secret: {name}'
+          key = Path(os.environ['RUNNER_TEMP']) / 'brainwave-release.jks'
+          key.write_bytes(base64.b64decode(os.environ['ANDROID_KEYSTORE_BASE64'], validate=True))
+          key.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'ANDROID_KEYSTORE_PATH={key}\n')
+      - run: bun install --frozen-lockfile
+      - run: bun run build:android --aab
+      - name: Verify and collect Android packages
+        shell: bash
+        run: |
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          mkdir -p release
+          cp src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk release/Brainwave-android-arm64.apk
+          cp src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab release/Brainwave-android-arm64.aab
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: installer-android-arm64
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove temporary key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/brainwave-release.jks"
+
+  draft:
+    needs: [version, desktop, android]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_COMMIT: ${{ needs.version.outputs.commit }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: release
+      - name: Check complete asset set and write checksums
+        shell: python
+        run: |
+          import hashlib
+          from pathlib import Path
+          root = Path('release')
+          expected = {'Brainwave-macos-universal.dmg', 'Brainwave-windows-x64-setup.exe', 'Brainwave-android-arm64.apk', 'Brainwave-android-arm64.aab'}
+          assert {p.name for p in root.iterdir()} == expected, 'Release asset set is incomplete or unexpected'
+          lines = []
+          for name in sorted(expected):
+              path = root / name
+              assert path.stat().st_size > 0, f'Empty asset: {name}'
+              with path.open('rb') as asset:
+                  digest = hashlib.file_digest(asset, 'sha256').hexdigest()
+              lines.append(f'{digest}  {name}\n')
+          (root / 'SHA256SUMS').write_text(''.join(lines))
+      - name: Create or update a draft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_commit="$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)"
+          if [ "$remote_commit" != "$RELEASE_COMMIT" ]; then
+            printf '%s\n' 'The release tag moved during the build. Refusing to attach mismatched installers.' >&2
+            exit 1
+          fi
+          existing="$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft 2>/dev/null || true)"
+          if [ "$existing" = "false" ]; then
+            printf '%s\n' 'This release is already published. Create a new version instead of replacing its assets.' >&2
+            exit 1
+          fi
+          if [ "$existing" = "true" ]; then
+            gh release upload "$RELEASE_TAG" release/* --clobber
+          else
+            flags=()
+            if [[ "$RELEASE_TAG" == *-* ]]; then flags+=(--prerelease); fi
+            cat > release-notes.md <<'NOTES'
+          ## Downloads
+
+          - macOS Universal: Apple Silicon and Intel. Ad-hoc signed; not notarized.
+          - Windows x64: NSIS installer. Not Authenticode signed.
+          - Android ARM64: APK for installation; AAB for store submission.
+          - iOS: distribution is not part of this workflow; use App Store/TestFlight when available.
+
+          Verify downloads against SHA256SUMS. Back up notes before upgrading; Android updates require the same signing identity.
+
+          ## Changes
+
+          NOTES
+            gh api "repos/$GH_REPO/releases/generate-notes" -f tag_name="$RELEASE_TAG" --jq .body >> release-notes.md
+            gh release create "$RELEASE_TAG" release/* --verify-tag --draft --notes-file release-notes.md --title "Brainwave $RELEASE_TAG" "${flags[@]}"
+          fi

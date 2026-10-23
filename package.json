@@ -1,0 +1,64 @@
+{
+  "name": "brainwave",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "bun run typecheck && vite build",
+    "build:desktop": "bun scripts/build-native.ts desktop",
+    "build:android": "bash scripts/build-android.sh --apk",
+    "build:android:debug": "bash scripts/build-android.sh --apk --debug",
+    "build:android:aab": "bash scripts/build-android.sh --aab",
+    "build:ios": "bun scripts/build-native.ts ios",
+    "android:keystore": "bash scripts/build-android.sh --create-keystore",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "test": "bun test",
+    "test:e2e": "playwright test",
+    "ios": "tauri ios dev",
+    "android": "bash scripts/dev-android.sh",
+    "android:check": "bash scripts/dev-android.sh --check",
+    "ios:build:sim": "bash scripts/build-ios-simulator.sh",
+    "format": "prettier --write src tests scripts/*.ts package.json playwright.config.ts",
+    "format:check": "prettier --check src tests scripts/*.ts package.json playwright.config.ts",
+    "icons": "bun scripts/generate-icons.ts",
+    "check:boundaries": "bun scripts/check-boundaries.ts",
+    "check": "bun run typecheck && bun run format:check && bun run check:boundaries && bun test",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "test:android:native": "bun tests/native/android.ts",
+    "test:android:data": "bun tests/native/android-data.ts",
+    "check:public": "bun scripts/check-public-files.ts",
+    "hooks:install": "git config core.hooksPath .githooks"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "mdast-util-from-markdown": "^2.1.0",
+    "mdast-util-to-string": "^4.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@iconify-json/solar": "^1.2.13",
+    "@playwright/test": "^1.64.1",
+    "@tauri-apps/cli": "^2",
+    "@types/bun": "^1.4.3",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^6.0.2",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16"
+  },
+  "license": "MIT",
+  "homepage": "https://brainwave.lor4ai.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jxj2118/brainwave.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jxj2118/brainwave/issues"
+  }
+}
