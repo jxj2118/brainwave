@@ -151,7 +151,7 @@ jobs:
           rustup toolchain install 1.97.1 --profile minimal
           rustup default 1.97.1
           rustup target add aarch64-linux-android
-          sdkmanager 'platform-tools' 'platforms;android-37' 'build-tools;36.0.0' 'ndk;28.2.13676358'
+          sdkmanager 'platform-tools' 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;28.2.13676358'
           printf 'NDK_HOME=%s/ndk/28.2.13676358\n' "$ANDROID_HOME" >> "$GITHUB_ENV"
       - name: Restore existing Android signing identity
         shell: python
