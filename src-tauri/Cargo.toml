@@ -1,6 +1,6 @@
 [package]
 name = "brainwave"
-version = "0.1.1"
+version = "0.1.2"
 description = "Local-first Git-backed notes"
 authors = ["jxj2118"]
 edition = "2024"

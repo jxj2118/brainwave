@@ -11,7 +11,7 @@ if (!device)
   throw new Error(
     `Start the test emulator ${serial} and install the debug APK first.`,
   );
-const pkg = "com.lor4ai.brainwave";
+const pkg = "com.lor4ai.brainwave.debug";
 const stamp = Date.now();
 const folder = `Native${stamp}`;
 const name = `Note${stamp}`;
@@ -82,7 +82,7 @@ try {
     )
     .toContain('"zh-CN"');
   await device.shell(`am force-stop ${pkg}`);
-  await device.shell(`am start -n ${pkg}/.MainActivity`);
+  await device.shell(`am start -n ${pkg}/com.lor4ai.brainwave.MainActivity`);
   page = await (await device.webView({ pkg })).page();
   await expect(
     page.getByRole("heading", { name: "笔记", exact: true, level: 1 }),

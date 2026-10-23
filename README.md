@@ -32,6 +32,12 @@ This project is in early development. Release notes describe which platforms and
 
 Use a separate Git repository for your notes. The Brainwave source repository is for developing the application.
 
+### Installing preview builds
+
+**macOS:** Open the DMG and drag Brainwave into Applications. These previews are ad-hoc signed and not notarized. If macOS blocks the first launch, follow [Apple's instructions](https://support.apple.com/en-us/102445): try opening Brainwave, then go to **System Settings → Privacy & Security → Open Anyway** and confirm.
+
+**Android:** Install the `.apk`; the `.aab` is for store submission. Older development builds used a different signing key. Back up any local notes and attachments before uninstalling an old development build, including any copy or retained data in a secondary profile. Then install the release APK. Subsequent release updates use the same signing key and can update in place. New debug builds install separately as **Brainwave Dev**.
+
 ## Development
 
 Install [Bun](https://bun.sh/), [Rust](https://www.rust-lang.org/tools/install), and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform.
@@ -56,7 +62,7 @@ bun run build:android
 bun run build:ios
 ```
 
-Android release builds require a signing key; run `bun run android:keystore` once to create a private local identity. iOS requires Xcode signing and provisioning. Build commands print the installer output paths.
+macOS DMG packaging also requires Python 3.10+ with `venv` and `pip`; use `BRAINWAVE_DMG_PYTHON` to select its executable if needed. The build installs pinned packaging dependencies in the ignored target directory. Android release builds require a signing key; run `bun run android:keystore` once to create a private local identity. iOS requires Xcode signing and provisioning. Build commands print the installer output paths.
 
 Run `bun run hooks:install` after cloning to enable publication checks before commits and pushes.
 

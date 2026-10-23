@@ -95,6 +95,10 @@ jobs:
             rustup target add x86_64-pc-windows-msvc
           fi
       - run: bun install --frozen-lockfile
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        if: runner.os == 'macOS'
+        with:
+          python-version: "3.12"
       - name: Build desktop installer
         env:
           BUILD_TARGET: ${{ matrix.target }}
@@ -245,6 +249,12 @@ jobs:
           - iOS: distribution is not part of this workflow; use App Store/TestFlight when available.
 
           Verify downloads against SHA256SUMS. Back up notes before upgrading; Android updates require the same signing identity.
+
+          ## Installing previews
+
+          **macOS:** Drag Brainwave to Applications. These previews are not notarized. If the first launch is blocked, try opening the app, then choose **System Settings → Privacy & Security → Open Anyway** and confirm. See [Apple's instructions](https://support.apple.com/en-us/102445).
+
+          **Android:** Install the APK. If an old development build or retained profile data has a different signature, back up local notes and attachments, then remove that old build and its retained data before installing. New debug builds use a separate application ID; release updates keep the same signing key.
 
           ## Changes
 

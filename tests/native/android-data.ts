@@ -18,7 +18,7 @@ const adb =
     process.platform === "win32" ? "adb.exe" : "adb",
   );
 const serial = process.env.BRAINWAVE_ANDROID_SERIAL ?? "emulator-5554";
-const pkg = "com.lor4ai.brainwave";
+const pkg = "com.lor4ai.brainwave.debug";
 const server = spawn("python3", ["tests/native/git-server.py"], {
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -263,7 +263,7 @@ try {
   await page.getByRole("button", { name: "Sync now", exact: true }).click();
   await expect(page.locator(".conflict-item")).toHaveCount(1);
   await device.shell(`am force-stop ${pkg}`);
-  await device.shell(`am start -n ${pkg}/.MainActivity`);
+  await device.shell(`am start -n ${pkg}/com.lor4ai.brainwave.MainActivity`);
   page = await (await device.webView({ pkg })).page();
   page.setDefaultTimeout(20000);
   await page.getByRole("button", { name: "Settings", exact: true }).click();

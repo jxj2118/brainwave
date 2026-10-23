@@ -32,6 +32,12 @@ Brainwave 使用同一套 React 界面、Tauri 原生外壳和 Rust 核心，无
 
 请为自己的笔记使用独立的 Git 仓库。本仓库用于开发 Brainwave 应用。
 
+### 安装测试版
+
+**macOS：** 打开 DMG，将 Brainwave 拖入 Applications。当前测试版为 ad-hoc 签名，尚未经过 Apple 公证。如果首次启动被拦截，请按照 [Apple 官方说明](https://support.apple.com/zh-cn/102445)，尝试打开后进入 **系统设置 → 隐私与安全性 → 仍要打开**，再确认打开。
+
+**Android：** 安装 `.apk`，`.aab` 用于商店提交。早期调试版使用了不同的签名密钥。请先备份本地笔记和附件，再卸载旧调试版，并清除其他用户或分身中保留的旧版本及数据，然后安装发布版 APK。后续发布版使用同一密钥，可以直接覆盖更新。新的调试版会以 **Brainwave Dev** 独立安装。
+
 ## 本地开发
 
 安装 [Bun](https://bun.sh/)、[Rust](https://www.rust-lang.org/tools/install) 和对应平台的 [Tauri 工具链](https://v2.tauri.app/start/prerequisites/)。
@@ -56,7 +62,7 @@ bun run build:android
 bun run build:ios
 ```
 
-Android release 构建需要发布密钥；首次配置可运行 `bun run android:keystore`。iOS 需要 Xcode 签名与描述文件。安装包输出路径由构建命令打印。
+macOS DMG 打包还需要带有 `venv` 和 `pip` 的 Python 3.10+，必要时可通过 `BRAINWAVE_DMG_PYTHON` 指定其可执行文件。构建脚本会在已忽略的 target 目录安装固定版本的打包依赖。Android release 构建需要发布密钥；首次配置可运行 `bun run android:keystore`。iOS 需要 Xcode 签名与描述文件。安装包输出路径由构建命令打印。
 
 首次克隆后运行 `bun run hooks:install`，启用提交与推送前的公开文件检查。
 
