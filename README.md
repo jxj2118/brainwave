@@ -18,15 +18,15 @@ Brainwave runs on a shared React frontend with a Tauri native shell and a Rust c
 
 ## Download
 
-Installers are distributed through [GitHub Releases](https://github.com/jxj2118/brainwave/releases). Until the first release is published, build from source using the instructions below.
+Download preview installers from [GitHub Releases](https://github.com/jxj2118/brainwave/releases). Signing details and validation limits are included in each release.
 
-| Platform     | Package                | Current status                                                                        |
-| ------------ | ---------------------- | ------------------------------------------------------------------------------------- |
-| macOS        | `.dmg`                 | Apple Silicon package built and verified locally; current packages use ad-hoc signing |
-| Windows      | `-setup.exe`           | Build entry available; native Windows validation pending                              |
-| Android      | `.apk`                 | ARM64 release package built and signature verified locally; Android 7.0+              |
-| iOS / iPadOS | App Store / TestFlight | Device archive builds; signing and distribution setup pending; iOS 16+                |
-| Web / PWA    | Static build           | UI preview available; browser note storage and Git sync are pending                   |
+| Platform     | Package                | Current status                                                         |
+| ------------ | ---------------------- | ---------------------------------------------------------------------- |
+| macOS        | `.dmg`                 | Universal package built in CI; ad-hoc signed, not notarized            |
+| Windows      | `-setup.exe`           | x64 installer built in CI; unsigned; runtime validation pending        |
+| Android      | `.apk`                 | ARM64 APK and AAB built and signed in CI; Android 7.0+                 |
+| iOS / iPadOS | App Store / TestFlight | Device archive builds; signing and distribution setup pending; iOS 16+ |
+| Web / PWA    | Static build           | UI preview available; browser note storage and Git sync are pending    |
 
 This project is in early development. Release notes describe which platforms and architectures have been tested. Download the installer from a release's **Assets** section; GitHub's automatically generated source archives contain the application source.
 

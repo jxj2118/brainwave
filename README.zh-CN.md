@@ -18,15 +18,15 @@ Brainwave 使用同一套 React 界面、Tauri 原生外壳和 Rust 核心，无
 
 ## 下载
 
-安装包通过 [GitHub Releases](https://github.com/jxj2118/brainwave/releases) 分发。首个版本发布前，可以按下方说明从源码构建。
+请从 [GitHub Releases](https://github.com/jxj2118/brainwave/releases) 下载测试版安装包。每个 Release 会说明签名状态与验证范围。
 
-| 平台         | 分发形式               | 当前状态                                                     |
-| ------------ | ---------------------- | ------------------------------------------------------------ |
-| macOS        | `.dmg`                 | Apple Silicon 安装包已在本机构建、校验；目前采用 ad-hoc 签名 |
-| Windows      | `-setup.exe`           | 已有构建入口，待 Windows 原生环境验证                        |
-| Android      | `.apk`                 | ARM64 release 包已在本机构建、验签；Android 7.0 及以上       |
-| iOS / iPadOS | App Store / TestFlight | 真机归档已通过，签名与分发配置待完成；iOS 16 及以上          |
-| Web / PWA    | 静态构建               | 可预览界面，浏览器笔记存储与 Git 同步待实现                  |
+| 平台         | 分发形式               | 当前状态                                              |
+| ------------ | ---------------------- | ----------------------------------------------------- |
+| macOS        | `.dmg`                 | 通用包已在 CI 构建；ad-hoc 签名，尚未公证             |
+| Windows      | `-setup.exe`           | x64 安装包已在 CI 构建；未签名，待运行验收            |
+| Android      | `.apk`                 | ARM64 APK、AAB 已在 CI 构建并签名；Android 7.0 及以上 |
+| iOS / iPadOS | App Store / TestFlight | 真机归档已通过，签名与分发配置待完成；iOS 16 及以上   |
+| Web / PWA    | 静态构建               | 可预览界面，浏览器笔记存储与 Git 同步待实现           |
 
 项目处于早期开发阶段。每个 Release 的说明会列出实际验证的平台和架构。请在 Release 的 **Assets** 中下载安装包；GitHub 自动生成的源码压缩包包含的是应用源代码。
 
